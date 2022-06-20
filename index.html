@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mördarleken</title>
+
+    <!-- tailwindcss -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+    <!-- fontawesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+    <!-- jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- jquery csv -->
+    <script src="jquery.csv.js"></script>
+</head>
+<body class="bg-gray-900">
+    <!-- csv file input -->
+    <div class="container mx-auto">
+        <div class="flex justify-center">
+            <div class="w-full text-center">
+                <form enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="text-2xl p-3 block text-left pb-0 text-white text-sm font-bold mb-2" for="csv">
+                            CSV-fil
+                        </label>
+                        <input class="bg-white hover:bg-gray-100 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="csv" name="csv" type="file" placeholder="Upload CSV File">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="bg-white mx-auto flex justify-around border rounded shadow-lg divide-x-2">
+            <div class="py-3 w-1/2 max-w-md flex content-around">
+                <div class="w-1/2 text-center">
+                    <h2 class="text-xl font-bold">Enbart bybor</h2>
+                    <ul id="regulars"></ul>
+                </div>
+                <div class="w-1/2 text-center">
+                    <h2 class="text-xl font-bold">Potentiella mördare</h2>
+                    <ul id="potential-murderers"></ul>
+                </div>
+            </div>
+            <div class="w-1/2 max-w-md py-3">
+                <h1 class="text-3xl p-2 text-center underline">Föreslagen mördare</h1>
+                <p class="text-xl p-2 text-center" id="murderer">Ingen</p>
+                <div class="flex justify-center p-2">
+                    <button id="randomise" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" id="randomize">
+                        Slumpa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- javascript read csv -->
+    <script>
+        $(document).ready(() => {
+            let data = {};
+            let potentialMurderers = {};
+            let regulars = {};
+
+            $("#randomise").on("click", () => {
+                // select random entry from potentialMurderers
+                let randomMurderer = potentialMurderers[Math.floor(Math.random() * potentialMurderers.length)];
+                // write randomMurderer to #murderer
+                $("#murderer").text(randomMurderer);
+            });
+
+            $("#csv").on("change", () => {
+                let file = $("#csv")[0].files[0];
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    let csv = e.target.result;
+                    data = $.csv.toArrays(csv);
+
+                    // remove header
+                    data.shift();
+
+                    // create potential
+                    potentialMurderers = data.filter((row) => {
+                        return row[2] == "Ja";
+                    }).map((row) => row[1]);
+
+                    regulars = data.filter((row) => {
+                        return row[2] == "Nej";
+                    }).map((row) => row[1]);
+
+                    let murderersHtml = potentialMurderers.map((person) => {
+                        return `<li><p class="text-xl py-3 text-center">${person}</p></li>`;
+                    }).join("");
+
+                    let regularsHtml = regulars.map((person) => {
+                        return `<li><p class="text-xl py-3 text-center">${person}</p></li>`;
+                    }).join("");
+                    
+                    $("#potential-murderers").html(murderersHtml);
+                    $("#regulars").html(regularsHtml);
+                };
+                reader.readAsText(file);
+            });
+        });
+    </script>
+</body>
+</html>
